@@ -290,6 +290,38 @@ async function run() {
       }
     });
 
+    // UPDATE
+    // UPDATE Export Product
+    app.put("/products/:id", async (req, res) => {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      try {
+        const result = await exportCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+
+        const updatedProduct = await exportCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        res.json({
+          success: true,
+          message: "Product updated",
+          data: updatedProduct,
+        });
+      } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
     // Delete
     // DELETE Import
     app.delete("/imports/:id", async (req, res) => {
