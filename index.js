@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 dotenv.config();
@@ -86,6 +86,35 @@ async function run() {
           success: false,
           message: "Failed to fetch products",
           error: err.message,
+        });
+      }
+    });
+
+    // Product Details
+    app.get("/products/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const product = await exportCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (!product) {
+          return res.send({
+            success: false,
+            message: "Product not found",
+          });
+        }
+
+        res.send({
+          success: true,
+          data: product,
+        });
+      } catch (err) {
+        console.log(err);
+        return res.send({
+          success: false,
+          message: "Server error",
         });
       }
     });
