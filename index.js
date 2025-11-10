@@ -45,6 +45,53 @@ async function run() {
     const usersCollection = database.collection("users");
     const exportCollection = database.collection("export");
     const importCollection = database.collection("import");
+
+    // Product
+    // Postting
+    app.post("/products", async (req, res) => {
+      try {
+        const product = req.body;
+
+        if (
+          !product ||
+          !product.name ||
+          !product.image ||
+          !product.price ||
+          !product.origin ||
+          !product.rating ||
+          !product.quantity ||
+          !product.createdAt ||
+          !product.createdBy
+        ) {
+          return res.status(400).send({ message: "Invalid product data" });
+        }
+        // dont add directly
+        const newProduct = {
+          name: product.name,
+          image: product.image,
+          price: product.price,
+          origin: product.origin,
+          rating: product.rating,
+          quantity: product.quantity,
+          createdAt: product.createdAt,
+          createdBy: product.createdBy,
+        };
+
+        const result = await exportCollection.insertOne(newProduct);
+
+        res.send({
+          success: true,
+          message: "Product added successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (err) {
+        res.status(500).send({
+          success: false,
+          message: "Failed to add product",
+          error: err.message,
+        });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
