@@ -145,7 +145,7 @@ async function run() {
           price: product.price,
           origin: product.origin,
           rating: product.rating,
-          quantity: product.quantity,
+          quantity: Number(product.quantity),
           createdAt: product.createdAt,
           createdBy: product.createdBy,
         };
@@ -162,6 +162,81 @@ async function run() {
           success: false,
           message: "Failed to add product",
           error: err.message,
+        });
+      }
+    });
+
+    // Import Product
+    app.post("/products/import", async (req, res) => {
+      try {
+        const { productId, quantity, importer } = req.body;
+
+        if (!productId || !quantity || !importer) {
+          return res.send({
+            success: false,
+            message: "Missing fields",
+          });
+        }
+
+        // find product
+        const product = await exportCollection.findOne({
+          _id: new ObjectId(productId),
+        });
+
+        if (!product) {
+          return res.send({
+            success: false,
+            message: "Product not found",
+          });
+        }
+
+        // check quantity
+        if (quantity > product.quantity) {
+          return res.send({
+            success: false,
+            message: "Import quantity exceeds available stock",
+          });
+        }
+
+        // prepare full product snapshot
+        const fullProduct = {
+          p_id: product._id,
+          name: product.name,
+          image: product.image,
+          origin: product.origin,
+          rating: product.rating,
+          price: product.price,
+          quantityAtImport: Number(product.quantity),
+          createdAt: product.createdAt,
+          createdBy: product.createdBy,
+        };
+
+        // save import entry
+        const importData = {
+          productId: productId,
+          importer,
+          quantity: Number(quantity),
+          fullProduct,
+          importedAt: new Date(),
+        };
+
+        await importCollection.insertOne(importData);
+
+        // reduce main product quantity
+        await exportCollection.updateOne(
+          { _id: new ObjectId(productId) },
+          { $inc: { quantity: -quantity } }
+        );
+
+        res.send({
+          success: true,
+          message: "Product imported successfully",
+        });
+      } catch (err) {
+        console.log(err);
+        res.send({
+          success: false,
+          message: "Server error",
         });
       }
     });
