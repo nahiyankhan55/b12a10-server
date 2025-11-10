@@ -46,6 +46,29 @@ async function run() {
     const exportCollection = database.collection("export");
     const importCollection = database.collection("import");
 
+    // Home Products
+    // Get latest 6 products
+    app.get("/products/home/latest", async (req, res) => {
+      try {
+        const products = await exportCollection
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(6)
+          .toArray();
+
+        res.send({
+          success: true,
+          data: products,
+        });
+      } catch (err) {
+        res.status(500).send({
+          success: false,
+          message: "Failed to fetch products",
+          error: err.message,
+        });
+      }
+    });
+
     // Product
     // Postting
     app.post("/products", async (req, res) => {
