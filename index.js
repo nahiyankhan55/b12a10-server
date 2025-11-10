@@ -69,6 +69,27 @@ async function run() {
       }
     });
 
+    // Get all products with optional search
+    app.get("/products", async (req, res) => {
+      try {
+        const search = req.query.search || "";
+        const query = search ? { name: { $regex: search, $options: "i" } } : {};
+
+        const products = await exportCollection.find(query).toArray();
+
+        res.send({
+          success: true,
+          data: products,
+        });
+      } catch (err) {
+        res.status(500).send({
+          success: false,
+          message: "Failed to fetch products",
+          error: err.message,
+        });
+      }
+    });
+
     // Product
     // Postting
     app.post("/products", async (req, res) => {
