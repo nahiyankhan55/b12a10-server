@@ -349,6 +349,27 @@ async function run() {
         res.status(500).send({ success: false, message: "Server error" });
       }
     });
+
+    // DELETE Export Product
+    app.delete("/products/:id", async (req, res) => {
+      const { id } = req.params;
+
+      try {
+        const result = await exportCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+
+        res.json({ success: true, message: "Product deleted" });
+      } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
