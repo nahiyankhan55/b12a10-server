@@ -147,6 +147,27 @@ async function run() {
       }
     });
 
+    // GET Exports
+    app.get("/exports", async (req, res) => {
+      const { user, search } = req.query;
+      if (!user)
+        return res
+          .status(400)
+          .json({ success: false, message: "User email required" });
+
+      try {
+        const query = { createdBy: user };
+        if (search) {
+          query.name = { $regex: search, $options: "i" }; // case-insensitive search
+        }
+
+        const exportsData = await exportCollection.find(query).toArray(); // <-- .toArray() is required
+        res.json({ success: true, data: exportsData });
+      } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
     // Product
     // Postting
     app.post("/products", async (req, res) => {
