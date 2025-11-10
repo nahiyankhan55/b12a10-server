@@ -268,6 +268,34 @@ async function run() {
         });
       }
     });
+
+    // Delete
+    // DELETE Import
+    app.delete("/imports/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!id) {
+          return res
+            .status(400)
+            .send({ success: false, message: "Import ID missing" });
+        }
+
+        const result = await importCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res
+            .status(404)
+            .send({ success: false, message: "Import not found" });
+        }
+
+        res.send({ success: true, message: "Import removed successfully" });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ success: false, message: "Server error" });
+      }
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
