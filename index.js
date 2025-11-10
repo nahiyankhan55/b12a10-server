@@ -119,6 +119,34 @@ async function run() {
       }
     });
 
+    // GET Imports
+    app.get("/imports", async (req, res) => {
+      try {
+        const userEmail = req.query.user;
+        const search = req.query.search || "";
+
+        if (!userEmail) {
+          return res
+            .status(400)
+            .send({ success: false, message: "User not provided" });
+        }
+
+        const query = {
+          importer: userEmail,
+          ...(search && {
+            "fullProduct.name": { $regex: search, $options: "i" },
+          }),
+        };
+
+        const imports = await importCollection.find(query).toArray();
+
+        res.send({ success: true, data: imports });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ success: false, message: "Server error" });
+      }
+    });
+
     // Product
     // Postting
     app.post("/products", async (req, res) => {
