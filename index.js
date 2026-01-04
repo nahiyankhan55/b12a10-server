@@ -103,13 +103,41 @@ async function run() {
       }
     });
 
-    // Get all products with optional search
+    // Get all products with Search, Filter, and Sort
     app.get("/products", async (req, res) => {
       try {
-        const search = req.query.search || "";
-        const query = search ? { name: { $regex: search, $options: "i" } } : {};
+        const { search, category, minPrice, maxPrice, sort } = req.query;
 
-        const products = await exportCollection.find(query).toArray();
+        // Build Query Object
+        let query = {};
+
+        // 1. Search by Name
+        if (search) {
+          query.name = { $regex: search, $options: "i" };
+        }
+
+        // 2. Filter by Category
+        if (category && category !== "all") {
+          query.category = category;
+        }
+
+        // 3. Filter by Price Range
+        if (minPrice || maxPrice) {
+          query.price = {};
+          if (minPrice) query.price.$gte = parseFloat(minPrice);
+          if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+        }
+
+        // 4. Sorting Logic
+        let sortOptions = {};
+        if (sort === "priceLow") sortOptions.price = 1;
+        else if (sort === "priceHigh") sortOptions.price = -1;
+        else if (sort === "newest") sortOptions._id = -1;
+
+        const products = await exportCollection
+          .find(query)
+          .sort(sortOptions)
+          .toArray();
 
         res.send({
           success: true,
