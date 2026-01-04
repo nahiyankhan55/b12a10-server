@@ -69,6 +69,18 @@ async function run() {
       }
     });
 
+    // Get all users
+    app.get("/users", async (req, res) => {
+      try {
+        const result = await usersCollection.find().toArray();
+        res.send(result);
+      } catch (err) {
+        res
+          .status(500)
+          .send({ success: false, message: "Failed to fetch users" });
+      }
+    });
+
     // Home Stats
     app.get("/home/stats/count", async (req, res) => {
       try {
@@ -209,6 +221,29 @@ async function run() {
           message: "Failed to add product",
           error: err.message,
         });
+      }
+    });
+
+    // Post user (Register/Google Login)
+    app.post("/users", async (req, res) => {
+      try {
+        const user = req.body;
+        const query = { email: user.email };
+
+        // চেক করা হচ্ছে ইউজার অলরেডি আছে কি না
+        const existingUser = await usersCollection.findOne(query);
+        if (existingUser) {
+          return res.send({ message: "user already exists", insertedId: null });
+        }
+
+        const result = await usersCollection.insertOne(user);
+        res.send({
+          success: true,
+          message: "User created successfully",
+          insertedId: result.insertedId,
+        });
+      } catch (err) {
+        res.status(500).send({ success: false, error: err.message });
       }
     });
 
