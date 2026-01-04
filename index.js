@@ -53,7 +53,7 @@ async function run() {
         const products = await exportCollection
           .find({})
           .sort({ createdAt: -1 })
-          .limit(6)
+          .limit(8)
           .toArray();
 
         res.send({
@@ -66,6 +66,28 @@ async function run() {
           message: "Failed to fetch products",
           error: err.message,
         });
+      }
+    });
+
+    // Home Stats
+    app.get("/home/stats/count", async (req, res) => {
+      try {
+        const totalUsers = await usersCollection.countDocuments();
+        const totalExports = await exportCollection.countDocuments();
+        const totalImports = await importCollection.countDocuments();
+
+        res.send({
+          success: true,
+          stats: {
+            users: totalUsers,
+            exports: totalExports,
+            imports: totalImports,
+          },
+        });
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, message: "Internal Server Error" });
       }
     });
 
@@ -174,32 +196,7 @@ async function run() {
       try {
         const product = req.body;
 
-        if (
-          !product ||
-          !product.name ||
-          !product.image ||
-          !product.price ||
-          !product.origin ||
-          !product.rating ||
-          !product.quantity ||
-          !product.createdAt ||
-          !product.createdBy
-        ) {
-          return res.status(400).send({ message: "Invalid product data" });
-        }
-        // dont add directly
-        const newProduct = {
-          name: product.name,
-          image: product.image,
-          price: product.price,
-          origin: product.origin,
-          rating: product.rating,
-          quantity: Number(product.quantity),
-          createdAt: product.createdAt,
-          createdBy: product.createdBy,
-        };
-
-        const result = await exportCollection.insertOne(newProduct);
+        const result = await exportCollection.insertOne(product);
 
         res.send({
           success: true,
@@ -251,7 +248,7 @@ async function run() {
         const fullProduct = {
           p_id: product._id,
           name: product.name,
-          image: product.image,
+          images: product.images,
           origin: product.origin,
           rating: product.rating,
           price: product.price,
